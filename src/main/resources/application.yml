@@ -1,0 +1,35 @@
+spring:
+  redis:
+    host: localhost
+    port: 9379
+    client-name: my-redis-cli
+    timeout: 15s
+    jedis:
+      pool:
+        max-idle: 10
+        min-idle: 3
+        max-active: 20
+        max-wait: 5s
+        time-between-eviction-runs: 10s
+
+  profiles:
+    active: student
+
+  data:
+    redis:
+      repositories:
+        enabled: true
+
+    mongodb:
+      host: localhost
+      port: 17017
+      database: test
+      auto-index-creation: true
+
+  zookeeper:
+    connect-string: localhost:9181
+    default-data: node default
+    session-timeout: 5s
+    connection-timeout: 2s
+    retry-times: 2
+    retry-sleep-time: 1s
