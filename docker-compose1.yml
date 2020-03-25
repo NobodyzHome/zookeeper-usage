@@ -1,0 +1,25 @@
+# 必须有version属性，并且属性值必须是字符串
+version: '3'
+services:
+  # 服务名，并非创建的容器的名字，默认创建的容器的名字是：工程名_服务名_序号，工程名即存储docker-compose.yml的文件夹，例如这里创建的容器是zookeeper-usage_my-redis_1
+  my-redis:
+    # 使用的镜像
+    image: redis
+    # 端口绑定，相当于docker run -p选项
+    ports:
+    - '9379:6379'
+    # 文件挂载，相当于docker run -v选项
+#    volumes:
+#    - 'D:/logs:/usr/logs'
+    # 配置容器在启动成功后执行的命令，输出的内容只有在非静默模式下（即没有-d选项）才能看到。但是容器在执行完该命令后，容器就关闭了
+    # command: ls /usr/logs
+  my-zookeeper:
+    image: zookeeper
+    ports:
+    - '9181:2181'
+#    volumes:
+#    - 'D:/logs:/usr/logs'
+  my-mongodb:
+    image: mongo
+    ports:
+      - '17017:27017'

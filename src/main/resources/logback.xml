@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
+<!-- scan:当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true -->
+<!-- scanPeriod:设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。 -->
+<configuration debug="false" scan="true" scanPeriod="10s">
+
+    <!-- 我们可以设置一些自定义的属性，然后在配置中可以使用占位符来替换属性值，在PatternLayout中也可以使用占位符将属性值替换到日志内容中 -->
+    <property name="test" value="haha"/>
+    <property name="base-log-dir" value="/Users/maziqiang/logs"/>
+    <property name="log-file" value="${base-log-dir}/file-appender.log"/>
+    <property name="roll-log-by-time" value="${base-log-dir}/roll-file-appender-by-time.log"/>
+
+    <!-- 在配置一个appender时，实际就是会这个Appender类的属性赋值，我们可以打开对应的Appender类，看到它都有哪些属性，然后为其赋值。 -->
+    <!-- 向console输出的appender -->
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 设置使用的Encoder实例 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!-- 设置使用的Layout实例 -->
+            <pattern>
+                【说明】：%n[字面量（也就是非关键字符的那些字）都是直接输出的]%n[\\是将关键字转义成普通字符]%n[\%n是换行符]%n[将\%与关键字符（例如m、n、l等）结合在一起，就是logback的一个输出项，例如\%m是输出日志消息内容，\%l是输出当前行数]%n[在\%与关键字符中间，可以加入对输出字符的长度的格式化，其中20和-30代表向前和向后补空格直接满足字符长度，而.20和.-30代表从右往左或从左往右截取指定个数的字符]%n[在\%c和\%C后，可以跟大括号{5}，缩简logger
+                name和类的长度]%n%n%n【应用】：%n[\%10p（输出的日志级别，并且向前补空格，直至共10个字符）:%10p]%n[\%-15t（输出当前线程名，并向后补空格，直至共15个字符）:%-15t]%n[\%c（输出当前logger的name）:%c]%n[\%c{5}（以简短的形式输出logger，但是注意：最后一个点后面的内容，在这里也就是LogBackTest是无论如何不会被省略的）:%c{5}]%n[\%10r（输出从程序启动到打印当前日志的毫秒数，并向前补空格直至10个字符）:%10r]%n[\%C（输出当前logger打印日志时所在的类）:%C]%n[\%d{yyyy-MM-dd
+                HH:mm:ss}:%d{yyyy-MM-dd
+                HH:mm:ss}]%n[\%L（输出logger打印日志时所处于当前java类的行号）:%L]%n[\%.30m（输出logger打出的消息内容，并且当超过30个字符时，从右往左截取至第30个字符）:%.30m]%n[\%.-10M（输出当前logger输出时所在的方法名，并且当超过10个字符时，从左往右截取10个字符）:%.-10M]%n[\%20.-30F（输出当前打印日志时的类文件，并且如果字符不够20个字符，向前补空格直至20个字符，如果字符超过30个字符，从左往右截取至30个字符）:%20.-30F]%n[\%caller{3}（打出当前调用栈中的前三个）:%caller{3}]%n[\%-20.30m（输出当前日志的内容，并且如果日志内容不足20个字符，从后往前补空格直至20个字符，如果日志内容超过30个字符，从右往左截取至30个字符）:%-20.30m]%n[可以使用一个占位符，可以在配置文件中设置属性或者使用系统属性：${java.home}，${test}]%n[\%ex（如果当前日志输出时没有给出异常，那么就不会输出此项，否则会输出异常堆栈）:%ex]%n[\%xEx{5}（输出异常时，只输出堆栈顶的前5个栈帧）:%xEx{5}]%n[\%rEx（输出异常）:%rEx]
+            </pattern>
+            <!-- 把日志内容使用什么字符集转换成二进制流 -->
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <!-- 使用哪个输出器向console输出内容 -->
+        <target>System.out</target>
+        <!--<target>System.err</target>-->
+
+        <!-- 按输出的日志级别进行过滤 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!-- 指定要比较的级别 -->
+            <level>info</level>
+            <!-- 当前日志输出的级别的指定级别相同时的处理，ACCEPT代表可以输出 -->
+            <onMatch>ACCEPT</onMatch>
+            <!-- 当前日志输出的级别的指定级别不同时的处理，DENY代表不可以输出 -->
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 向指定文件输出的appender，不会进行文件的归档处理 -->
+    <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
+        <!-- encoder是把要把日志内容输出转换成二进制字节的工具 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!-- 当给PatternLayoutEncoder赋值pattern属性时，PatternLayoutEncoder会自动生成PatternLayout，Layout是把日志内容处理成指定格式的工具 -->
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%10p][%c{10}][%-20M] %m （%F:%L）%n</pattern>
+        </encoder>
+        <!-- 这里好像必须用绝对路径 -->
+        <!-- 为什么FileAppender的属性名是fileName，但是要使用file标签来赋值呢？因为虽然属性名是fileName，但是给该属性赋值的setter方式是setFile，所以此处使用的是<file>标签 -->
+        <file>${log-file}</file>
+        <!-- 是否在原文件下追加输出，否的话则把已有文件内容覆盖-->
+        <append>true</append>
+        <!-- 是否系统安全的输出日志 -->
+        <prudent>false</prudent>
+        <!-- 门槛方式的过滤器，当当前输出的日志等级超过或等于指定的等级时，可以输出 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>info</level>
+        </filter>
+        <!-- 如果设置该属性为true，那么每次使用该appender输出日志时，日志内容会立即冲到日志文件中，而不会将日志内容存储到缓冲区中，等缓冲区满了以后再输出到日志文件中。
+            默认情况下，该属性的属性值是true。-->
+        <immediateFlush>false</immediateFlush>
+        <!-- 如果没有设置immediateFlush属性为true，那么每次使用appender输出日志时，会优先将日志内容输出到缓冲区中。等缓冲区内容超过bufferSize属性指定的大小后，再将缓冲区的内容输出到指定的文件中。 -->
+        <!-- 注意：缓冲区中的内容是在内存中，如果缓冲区没有满，但是整个程序被关闭了，那么缓冲区的内容有可能不会刷新到文件中，而是随着内存关闭而丢失了。 -->
+        <bufferSize>2KB</bufferSize>
+    </appender>
+
+    <!-- 向指定文件输出的appender，可以按日期和文件大小进行归档日志创建，并且能够对历史归档进行定期清理 -->
+    <appender name="rollFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <prudent>false</prudent>
+        <append>true</append>
+        <!-- 日志等级门槛过滤器，当日志事件的等级大于或等于该过滤器指定的等级时，则允许输出 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>trace</level>
+        </filter>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}][%-5p][%c{5}] -- %m%n%ex</pattern>
+        </encoder>
+
+        <!-- 在RollingFileAppender中，有一个当前激活的文件的概念，也就是currentlyActiveFile属性。RollingFileAppender会往currentlyActiveFile文件里输出。RollingFileAppender会委派RollingPolicy获取currentlyActiveFile。
+         当刚创建RollingFileAppender时，RollingPolicy在获取currentlyActiveFile时，先判断当前RollingFileAppender中是否设置了file属性，如果设置了，则currentlyActiveFile就是这个文件。
+         如果没有设置，那么RollingPolicy则会根据自身规则来生成一个file（取决于fileNamePattern属性），作为currentlyActiveFile。-->
+        <!-- 注意：RollingFileAppender输出日志的方式，当有日志内容输出时，会判断currentlyActiveFile对应的文件是否超过了maxFileSize或fileNamePattern的要求。如果是的话，会使用RollingPolicy创建一个归档文件，
+            然后把currentlyActiveFile文件的内容剪切给归档文件。最后把日志内容输出给currentlyActiveFile。 -->
+        <file>/Users/maziqiang/logs/my-zookeeper.log</file>
+
+        <!-- RollingFileAppender的setRollingPolicy方法给出，当设置RollingPolicy时，如果这个实例也是TriggeringPolicy类型的，
+            就也会给triggeringPolicy属性赋值。因此，只需要给rollingPolicy属性赋值即可。 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- fileNamePattern和maxFileSize代表的判断当前日志文件被滚动的条件，也就是归档文件被创建的条件。fileNamePattern代表过多长时间滚动当前日志文件并创建一个归档文件
+                ，而maxFileSize代表日志文件多大是滚动当前日志文件并创建一个归档文件。
+                而maxHistory和totalSizeCap代表归档日志的清理条件，即使日志仅按照日期进行滚动，但归档日志清理依然会按照日志的日期和大小进行清理。 -->
+
+            <!-- 如果是SizeAndTimeBasedRollingPolicy，那么fileNamePattern必须有%d和%i，%d代表按日期分割，%i代表一个从0开始的数字，日志文件大小超过maxFileSize以后新建一个日志文件，并且数字加1
+                以当前fileNamePattern举例，生成的日志文件是/Users/maziqiang/logs/zookeeper-2020-03/mylog-2020-03-18-0.log -->
+            <!-- pattern中可以出现多次%d，但是日志按日期进行滚动的依据只能有一个，其他不代表按日期滚动的依据的%d，需要增加aux后缀，用于告知logback此处内容只需要转成日期即可，无需使用此%d来进行日志分割。
+                例如：zookeeper-%d{yyyy-MM,aux}代表生成一个展示月份的文件夹（例如zookeeper-2020-05），但是它不是日志滚动的依据。 -->
+            <!-- 注意：如果文件名以gz或zip作为后缀名，那么logback会自动把归档文件进行压缩，其好处是减少归档文件占用的空间 -->
+            <fileNamePattern>/Users/maziqiang/logs/zookeeper-%d{yyyy-MM,aux}/mylog-%d{yyyy-MM-dd}-%i.gz
+            </fileNamePattern>
+            <!-- maxFileSize是当前日志文件内容超过多大时被分割的判断依据，日志文件超过指定大小，则当前日志文件内容会被清空，生成一个新的归档文件存储被清空的日志内容 -->
+            <maxFileSize>10KB</maxFileSize>
+
+            <!-- 在logback启动时就执行一次归档日志的清理操作，至于归档日志的清理操作都做了什么，在下面注释里有说明。 -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <!-- maxHistory和totalSizeCap都是归档文件的删除时机判断，当进行一次归档日志清楚时，logback会分两步进行日志清除：
+                1.按归档文件的日期清除历史日志，只保留距当前日期maxHistory天之内的归档日志文件，其余日期的归档日志都会被删除
+                2.按归档文件的大小清除历史日志，会遍历每一个归档文件，记录已遍历的文件的总大小，如果超过了totalSizeCap，则删除当前遍历的文件，如果没有超过，则继续遍历下一个归档文件 -->
+            <!-- maxHistory代表的是最多保留多少天的归档文件，而不是归档天数的文件最多是多少天 -->
+            <maxHistory>10</maxHistory>
+            <!-- totalSizeCap代表的是归档文件最大是多少，logback会遍历每一个归档文件，然后累计已遍历的归档文件的大小是多少。当累计大小没有超过totalSizeCap的设置，那么当前遍历的文件不会被删除。
+                当累计的大小已经超过了totalSizeCap的设置，那么就删除当前遍历的文件，同时，后续每一个被遍历的文件都会被删除。 -->
+            <totalSizeCap>30KB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 向指定文件输出日志内容，并且对日志文件按天进行滚动 -->
+    <appender name="rollFileByTimeAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}][%10p][%c{5}] --- %m%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>info</level>
+        </filter>
+
+        <file>${roll-log-by-time}</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/Users/maziqiang/logs/rollByTime/%d{yyyy-MM,aux}/my-log-%d{yyyy-MM-dd}.log
+            </fileNamePattern>
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>10KB</totalSizeCap>
+        </rollingPolicy>
+
+        <append>true</append>
+    </appender>
+
+    <!-- 异步appender。其实现方式是在append一个日志事件时，不是直接输出日志内容，而是将日志事件存放到一个BlockingQueue中。同时该appender会开启一个新的线程，不停自旋的往BlockingQueue中获取事件，然后交由聚合的其他appender来输出日志事件。
+        其好处是该appender方法不直接输出日志了，只是简单的往Queue里插入事件，因此响应速度要比其他Appender快。-->
+    <appender name="asyncAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 用于存储日志事件的队列的长度 -->
+        <queueSize>30</queueSize>
+        <!-- 在往日志事件队列存储日志事件时，是否不要阻塞。如果true的话，那么当队列已经满了后，再插入新的日志事件就插不进去了（即调用BlockingQueue的offer方法）。如果false的话，当队列已经满了后，再插入新的日志事件，当前事件就会一直阻塞，直到队列中有空余时才继续执行（即调用BlockingQueue的put方法） -->
+        <neverBlock>false</neverBlock>
+        <!-- 异步由哪个appender进行真正的日志输出。一个AsyncAppender只能包含一个Appender。 -->
+        <appender-ref ref="fileAppender"/>
+    </appender>
+
+    <!-- 当创建这个logger时，其实logback会创建一个logger树，会创建三个logger，name分别为com.mzq.logger、com.mzq、com，并且com.mzq.logger的parent是com.mzq，com.mzq的parent是com，com的parent是root。如下所示：
+       |- root
+        |- com
+          |- com.mzq
+            |- com.mzq.zookeeper
+     只不过由于com和com.mzq没有在配置文件里配置<logger>，因此它俩没有任何的appender，并且additivity属性为true。因此当使用com.mzq.logger这个logger进行输出时，如果additivity属性设置为true，那么当它输出完后，还会根据这个
+     树型结构，继续向上使用parent logger输出。虽然com.mzq和com这两个logger没有appender，不会输出内容，但是他们的additivity属性为true，因此会继续向上传播到root，使用root logger的appender再输出一次。
+     实际上，logback的日志输出机制使用的就是类似js的事件模型的事件驱动模式，当使用一个logger进行输出时，会创建一个logger事件，然后这个事件会从logger树的底端一直冒泡到顶端（在没有把additivity设置为false的情况下），让每一个logger都进行输出。
+     因此，别看只是使用一个logger输出，但是如果不设置logger的additivity属性，日志事件会一直向上冒泡，让整个logger树都进行输出，直到使用logger树的顶端（也就是root logger）进行输出。
+
+     当获取到一个logger并调用其日志输出方法时，能否创建一个logger事件并向整个logger树进行冒泡传播，这取决于当前要创建的日志事件的级别和这个<logger>所指定的日志级别是否匹配（即日志事件的级别要大于或等于<logger>指定的日志级别）
+    -->
+    <logger name="com.mzq.zookeeper" level="info">
+        <appender-ref ref="consoleAppender"/>
+        <appender-ref ref="rollFileAppender"/>
+    </logger>
+
+    <!-- 显式设置com.mzq.zookeeper的parent logger，也就是com.mzq，并且由于additivity属性设置为false，则终止了所有com.mzq的子logger的输出传播，不会传播给root logger  -->
+    <logger name="com.mzq" level="warn" additivity="false">
+        <appender-ref ref="fileAppender"/>
+    </logger>
+
+    <logger name="org.springframework" level="trace" additivity="false">
+        <appender-ref ref="rollFileAppender"/>
+    </logger>
+
+    <!-- root logger，所有logger树的顶端都是root logger -->
+    <root level="debug">
+        <appender-ref ref="consoleAppender"/>
+        <appender-ref ref="asyncAppender"/>
+        <appender-ref ref="rollFileAppender"/>
+    </root>
+</configuration>

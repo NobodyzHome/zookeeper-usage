@@ -2,14 +2,20 @@ package com.mzq.zookeeper.launcher;
 
 import com.mzq.zookeeper.launcher.domain.Student;
 import org.springframework.boot.Banner;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @EnableConfigurationProperties
 @SpringBootApplication
+@EnableScheduling
+@EnableCaching
 public class MyApp {
 
     public static void main(String[] args) {

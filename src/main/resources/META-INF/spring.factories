@@ -1,0 +1,2 @@
+# zookeeper的自动配置类
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.mzq.zookeeper.launcher.zookeeper.ZookeeperAutoConfigure

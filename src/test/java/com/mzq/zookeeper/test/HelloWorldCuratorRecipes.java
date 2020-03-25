@@ -17,6 +17,8 @@ import org.apache.curator.framework.recipes.cache.NodeCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCache;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
+import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
@@ -38,6 +40,7 @@ import org.springframework.data.redis.support.collections.DefaultRedisList;
 import org.springframework.data.redis.support.collections.DefaultRedisSet;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -218,6 +221,66 @@ public class HelloWorldCuratorRecipes {
             Thread.sleep(TimeUnit.MINUTES.toMillis(10));
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Master选举和分布式锁的一个相似之处在于多个jvm在同一时刻只有一个jvm能够执行，即获取到Master的jvm可以执行和获取到锁的jvm可以执行。
+     * 不同之处在于jvm在获取到分布式锁后，进行业务逻辑处理完毕后，就会主动释放锁。而获取到Master的jvm一般会一直执行，直到这个jvm因某种原因被关闭才会释放Master，让其他争取Master的jvm有机会获取Master。
+     * 总结来说，就是Master选举与分布式锁的不同之处在于释放资源的时机不同，分布式锁是在处理完业务逻辑后主动地释放分布式锁，而Master选举是在jvm异常退出后，被动地释放Master。
+     * <p>
+     * LeaderLatch和LeaderSelector的区别在于：
+     * LeaderLatch是需要客户端调用close方法来主动释放Master，而LeaderSelector是在获取到Mater后执行完LeaderSelectorListener，自动释放Master。也就是说LeaderLatch可以让客户端自主决定什么时候方式Master，
+     * 而LeaderSelector在获取到Master且执行完LeaderSelectorListener后，就会直接退出Master。
+     * <p>
+     * LeaderLatch和LeaderSelector的共同点在于：
+     * 在获取Master时都是以公平的方式获取Master，即所有竞争Master的客户端都是在指定节点下创建临时顺序节点，指定节点下的第一个节点获取到Master，当该节点被删除后，下一个节点就变成了第一个节点，那么这个节点
+     * 的客户端获取到Master。
+     */
+    @Test
+    public void testLeaderLatch() {
+        LeaderLatch leaderLatch = null;
+        try (CuratorFramework client = CuratorFrameworkFactory.newClient("localhost:12181", new RetryOneTime(1000))) {
+            client.start();
+
+            leaderLatch = new LeaderLatch(client, "/hello/leader-latch", "test");
+            leaderLatch.addListener(new LeaderLatchListener() {
+                @Override
+                public void isLeader() {
+                    System.out.println("获取到leader了");
+                }
+
+                @Override
+                public void notLeader() {
+                    System.out.println("没有获取到leader");
+                }
+            });
+
+            /*
+             * 当执行start方法后，当前LeaderLatch才开始进行Master竞争。start方法会异步执行以下内容：
+             * 1.在latchPath下创建一个临时顺序节点
+             * 2.如果创建的节点是latchPath下的第一个节点，则当前LeaderLatch获取到Master
+             * 3.如果创建的节点不是latchPath下的第一个节点，则当前LeaderLatch没有获取到Master，当前LeaderLatch会在watch它创建节点的上一个节点，当上一个节点被删除时，当前节点继续执行第二步，判断是否获取到Master。
+             *
+             * 所以：执行完start方法，不代表当前LeaderLatch获取到或没获取到Master，因为start方法中是把获取Master的逻辑异步提交出去了。
+             * 因此主线程则可以使用LeaderLatch的await方法来等待当前LeaderLatch获取到Master，然后进行一些获取到Master之后的业务逻辑处理。
+             * 同时，客户端还可以使用LeaderLatch的close方法来在程序发生异常后主动的释放Master，也就是删除latchPath下创建的第一个节点。
+             * 当然，客户端也可以不主动调用close方法，因为当前这个jvm结束后，由于zookeeper临时节点的特性，该jvm的zk客户端创建的临时节点就会被删除，latchPath下的第一个节点就会被自动删除。
+             */
+            leaderLatch.start();
+
+            // 主线程等待子线程获取到Master
+            leaderLatch.await();
+            System.out.println("获取到leader");
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (Objects.nonNull(leaderLatch)) {
+                try {
+                    leaderLatch.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 

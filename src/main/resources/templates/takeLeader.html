@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>take leader</title>
+    <script type="text/javascript" th:src="@{/static/vue/vue.js}"></script>
+    <script type="text/javascript" th:src="@{/static/jquery/jquery-3.4.1.js}"></script>
+    <script type="text/javascript" th:src="@{/static/axios/axios.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        function onload() {
+            var vue = new Vue({
+                el: "#vue",
+                data: {
+                    student: {
+                        id: '',
+                        age: '',
+                        name: ''
+                    }
+                }
+            });
+
+            // 使用传统jquery的ajax方式
+            // $.ajax({
+            //     url: "/hello/leaderStudent?format=json",
+            //     async: true,
+            //     success: function (data) {
+            //         vue.$set(vue.student, "id", data.id);
+            //         vue.$set(vue.student, "age", data.age);
+            //         vue.$set(vue.student, "name", data.name);
+            //     }
+            // });
+
+            axios.get("/hello/leaderStudent", {
+                params: {
+                    format: "json"
+                }
+            }).then(function (response) {
+                    let data = response.data;
+                    vue.student.id = data.id;
+                    vue.student.name = data.name;
+                    vue.student.age = data.age;
+                }
+            );
+
+            axios.post("/hello/requestBody", {id: 'haha121', name: '哈哈', age: 13})
+                .then(function (response) {
+                    alert(response.data)
+                });
+        }
+    </script>
+</head>
+<body onload="onload()">
+<p th:if="${!leaderStudent.isPresent()}">当前没有Leader</p>
+<table th:if="${leaderStudent.isPresent()}">
+    <tr>
+        <td>id</td>
+        <td th:text="${leaderStudent.get().getId()}"></td>
+    </tr>
+    <tr>
+        <td>姓名</td>
+        <td th:text="${leaderStudent.get().getName()}"></td>
+    </tr>
+    <tr>
+        <td>年龄</td>
+        <td th:text="${leaderStudent.get().getAge()}"></td>
+    </tr>
+</table>
+<div id="vue">
+    <table style="border:silver solid 1px">
+        <tr>
+            <td v-for="(value,name) in student">{{name}}</td>
+        </tr>
+        <tr>
+            <td v-for="value in student">{{value}}</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 spring:
   redis:
     host: localhost
-    port: 9379
+    port: 16379
     client-name: my-redis-cli
     timeout: 15s
     jedis:
@@ -27,9 +27,82 @@ spring:
       auto-index-creation: true
 
   zookeeper:
-    connect-string: localhost:9181
+    connect-string: localhost:12181
     default-data: node default
     session-timeout: 5s
     connection-timeout: 2s
     retry-times: 2
     retry-sleep-time: 1s
+
+  task:
+    scheduling:
+      pool:
+        size: 5
+
+      shutdown:
+        await-termination: true
+        await-termination-period: 5s
+
+      thread-name-prefix: my-task-
+
+  mvc:
+    locale: zh_CN
+    date-format: yyyy-MM-dd
+    static-path-pattern: /static/**
+    # 由于springboot提倡使用thymeleaf，因此就不注册jsp了
+    #    view:
+    #      prefix: /page/
+    #      suffix: .jsp
+    contentnegotiation:
+      favor-path-extension: false
+      favor-parameter: true
+      parameter-name: format
+      media-types:
+        txt: text/html
+        excel: application/vnd.ms-excel
+        json: application/json
+        xml: application/xml
+
+  resources:
+    static-locations:
+      - classpath:resources/
+      - classpath:static/
+
+  thymeleaf:
+    check-template: false
+    prefix: classpath:/templates/
+    suffix: .html
+    excluded-view-names:
+      - test
+      - ceshi
+      - hello
+
+  http:
+    encoding:
+      force: true
+
+  messages:
+    basename: config/i18n/messages
+
+  servlet:
+    multipart:
+      enabled: true
+      location: ~/Downloads
+      max-file-size: 2MB
+      max-request-size: 15MB
+      file-size-threshold: 100KB
+      resolve-lazily: true
+
+  cache:
+    type: redis
+    redis:
+      timeToLive: 3m
+      cache-null-values: on
+      key-prefix: cached-
+      use-key-prefix: true
+
+logging:
+  level:
+    org.springframework: debug
+
+  config: "classpath:logback.xml"
