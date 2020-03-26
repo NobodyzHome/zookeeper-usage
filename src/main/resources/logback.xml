@@ -6,7 +6,8 @@
 
     <!-- 我们可以设置一些自定义的属性，然后在配置中可以使用占位符来替换属性值，在PatternLayout中也可以使用占位符将属性值替换到日志内容中 -->
     <property name="test" value="haha"/>
-    <property name="base-log-dir" value="/Users/maziqiang/logs"/>
+    <!-- 我们可以使用占位符获取系统环境变量的属性，例如下面是获取环境变量HOME的属性值，即获取当前用户的路径/Users/maziqiang  -->
+    <property name="base-log-dir" value="${HOME}/logs"/>
     <property name="log-file" value="${base-log-dir}/file-appender.log"/>
     <property name="roll-log-by-time" value="${base-log-dir}/roll-file-appender-by-time.log"/>
 
